@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import List
 
 from controller import *
 
@@ -69,6 +70,51 @@ class Board:
 
 
 class Move:
+    class Direction(Enum):
+        NORTH_WEST = 1,
+        NORTH_EAST = 2,
+        SOUTH_WEST = 3,
+        SOUTH_EAST = 4
+
+    @staticmethod
+    def standard_diagonal(start_pos: (int, int), direction: Direction):
+        if direction == Move.Direction.NORTH_WEST:
+            return Move(start_pos, [start_pos[0] - 1, start_pos[1] - 1])
+        elif direction == Move.Direction.NORTH_EAST:
+            return Move(start_pos, [start_pos[0] + 1, start_pos[1] - 1])
+        elif direction == Move.Direction.SOUTH_WEST:
+            return Move(start_pos, [start_pos[0] - 1, start_pos[1] + 1])
+        elif direction == Move.Direction.SOUTH_EAST:
+            return Move(start_pos, [start_pos[0] + 1, start_pos[1] + 1])
+
+    @staticmethod
+    def single_skip(start_pos: (int, int), direction: Direction):
+        if direction == Move.Direction.NORTH_WEST:
+            return Move(start_pos, [start_pos[0] - 2, start_pos[1] - 2])
+        elif direction == Move.Direction.NORTH_EAST:
+            return Move(start_pos, [start_pos[0] + 2, start_pos[1] - 2])
+        elif direction == Move.Direction.SOUTH_WEST:
+            return Move(start_pos, [start_pos[0] - 2, start_pos[1] + 2])
+        elif direction == Move.Direction.SOUTH_EAST:
+            return Move(start_pos, [start_pos[0] + 2, start_pos[1] + 2])
+
+    @staticmethod
+    def skip_chain(start_pos: (int, int), directions: List[Direction]):
+        positions = [(0, 0)] * len(directions)
+        last_space = start_pos
+        for i in range(len(directions)):
+            direction = directions[i]
+            if direction == Move.Direction.NORTH_WEST:
+                last_space = [last_space[0] - 2, last_space[1] - 2]
+            elif direction == Move.Direction.NORTH_EAST:
+                last_space = [last_space[0] + 2, last_space[1] - 2]
+            elif direction == Move.Direction.SOUTH_WEST:
+                last_space = [last_space[0] - 2, last_space[1] + 2]
+            elif direction == Move.Direction.SOUTH_EAST:
+                last_space = [last_space[0] + 2, last_space[1] + 2]
+            positions[i] = last_space
+        return Move(start_pos, positions)
+
     def __init__(self, start_pos=(0, 0), pos_sequence=None):
         if pos_sequence is None:
             pos_sequence = [(0, 0)]
