@@ -45,3 +45,6 @@ class Graphics:
 
         # Make sure we push our updates to the screen!
         pygame.display.update()
+
+    def pixel_to_board(self, pixel_coords: (int, int)):
+        return int((pixel_coords[0] - self.x_off) / self.square_size), int((pixel_coords[1] - self.y_off) / self.square_size)

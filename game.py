@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List
+from typing import List, Tuple
 
 from controller import *
 
@@ -24,6 +24,12 @@ class Piece:
             self.color = Piece.RED
         elif team == Piece.Team.WHITE_TEAM:
             self.color = Piece.WHITE
+
+    def on_same_team(self, other):
+        return self.team == other.team
+
+    def on_opposite_team(self, other):
+        return not self.on_same_team(other)
 
 
 class Square:
@@ -68,13 +74,21 @@ class Board:
     def can_contain_piece(x, y):
         return x % 2 != y % 2
 
+    @staticmethod
+    def is_on_board(pos):
+        if pos is int:
+            print("oops")
+        x = pos[0]
+        y = pos[1]
+        return 0 <= x <= 7 and 0 <= y <= 7
+
 
 class Move:
     class Direction(Enum):
-        NORTH_WEST = 1,
-        NORTH_EAST = 2,
-        SOUTH_WEST = 3,
-        SOUTH_EAST = 4
+        NORTH_WEST = 0,
+        NORTH_EAST = 1,
+        SOUTH_WEST = 2,
+        SOUTH_EAST = 3
 
     @staticmethod
     def standard_diagonal(start_pos: (int, int), direction: Direction):
@@ -122,7 +136,59 @@ class Move:
         self.pos_sequence = pos_sequence
 
 
+def all_positions_on_board(move):
+    if not Board.is_on_board(move.start_pos):
+        return False
+
+    for pos in move.pos_sequence:
+        if not Board.is_on_board(pos):
+            return False
+
+    return True
+
+
+def get_all_jump_chains(num_jumps: int):
+    if num_jumps == 1:
+        all_chains = []
+        for direction in Move.Direction:
+            all_chains.append([direction])
+        return all_chains
+    else:
+        all_chains = []
+        for chain in get_all_jump_chains(num_jumps - 1):
+            for direction in Move.Direction:
+                new_chain = [direction]
+                for chain_dir in chain:
+                    new_chain.append(chain_dir)
+                all_chains.append(new_chain)
+        return all_chains
+
+
+def get_all_moves():
+    moves = []
+    for x in range(8):
+        for y in range(8):
+            start_pos = (x, y)
+
+            # Basic Directional Moves
+            for direction in Move.Direction:
+                moves.append(Move.standard_diagonal(start_pos, direction))
+
+            # 1-to-9 (maximum possible) Jumps
+            for num_jumps in range(1, 10):
+                jump_chains = get_all_jump_chains(num_jumps)
+                for chain in jump_chains:
+                    moves.append(Move.skip_chain(start_pos, chain))
+
+    # Only include those moves for which all positions are on the board
+    filtered_moves = list(filter(lambda move: all_positions_on_board(move), moves))
+
+    return filtered_moves
+
+
 class Game:
+    ALL_MOVES = get_all_moves()
+
     def __init__(self):
         self.board = Board()
         self.red_controller: Controller = PlayerController()
